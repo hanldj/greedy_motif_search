@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile-most Probable k-mer Finder</title>
+</head>
+<body>
+  <h1>Profile-most Probable k-mer Finder</h1>
+  <div>
+    <label for="text">Text:</label><br>
+    <textarea id="text" rows="4" cols="80"></textarea>
+  </div>
+  <div>
+    <label for="k">k:</label>
+    <input type="number" id="k" min="1">
+  </div>
+  <div>
+    <p>Profile matrix (4 rows: A, C, G, T; each row has k space-separated probabilities):</p>
+    <textarea id="profile" rows="4" cols="80"></textarea>
+  </div>
+  <button id="computeBtn">Compute</button>
+  <h2>Result</h2>
+  <div id="result"></div>
+
+  <script>
+    document.getElementById('computeBtn').addEventListener('click', () => {
+      const text = document.getElementById('text').value.trim();
+      const k = parseInt(document.getElementById('k').value, 10);
+      const profileInput = document.getElementById('profile').value.trim().split('\n');
+
+      if (!text || !k || profileInput.length !== 4) {
+        alert('Please enter valid Text, k, and 4 lines of Profile.');
+        return;
+      }
+
+      // Parse profile matrix
+      const profile = profileInput.map(row => row.trim().split(/\s+/).map(Number));
+      if (profile.some(r => r.length !== k || r.some(isNaN))) {
+        alert('Each profile row must contain exactly k numeric probabilities.');
+        return;
+      }
+
+      const nucIndex = { 'A': 0, 'C': 1, 'G': 2, 'T': 3 };
+      let maxProb = -1;
+      let mostProbKmer = '';
+
+      for (let i = 0; i <= text.length - k; i++) {
+        const kmer = text.substring(i, i + k);
+        let prob = 1;
+        for (let j = 0; j < k; j++) {
+          const nuc = kmer[j];
+          const idx = nucIndex[nuc];
+          if (idx === undefined) {
+            prob = 0;
+            break;
+          }
+          prob *= profile[idx][j];
+        }
+        if (prob > maxProb) {
+          maxProb = prob;
+          mostProbKmer = kmer;
+        }
+      }
+
+      document.getElementById('result').textContent = mostProbKmer || 'No valid k-mer found';
+    });
+  </script>
+</body>
+</html>
